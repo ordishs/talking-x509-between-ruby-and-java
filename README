@@ -1,0 +1,41 @@
+There are various steps needed to get Ruby and Java talking with X509 certificates.  Hopefully this brief walkthrough will help.
+
+1. Generate all the required certificates.
+2. Write the Java server that will accept SSL socket connections.
+3. Write the Ruby client that will talk to the server over SSL.
+
+
+Overview
+
+When an SSL server receives a client connection, it will check that the client's certificate is trusted.
+
+1. Generate all the required certificates.
+
+Ruby uses OpenSSL whilst Java uses its own keytool utility.
+
+
+Create a new Java Key Store with a single private key in it (use 'password' as the password).
+keytool -genkey -keystore server.jks -alias server
+
+Generate a certificate for this private key.
+keytool -export -keystore server.jks -alias server -file server.cer
+
+Create a second JKS with the server's certificate in it (use 'password' as the password).
+keytool -import -keystore trusted_clients.jks -alias server -file server.cer
+
+
+Now on the Ruby side, for each client that wants to connect to this server, we need to generate a public / private key pair.
+
+# Generate private key
+openssl genrsa -out client.key 1024
+
+# Generate a certificate from the private key
+openssl req -new -x509 -days 365 -key client.key -out client.pem
+
+
+On the server side:
+
+# Import certificate into the trusted store (note the alias needs to be unique for each client)
+keytool -importcert -keystore trusted_clients.jks -file client.pem -alias client
+
+# Don't forget to restart the server
