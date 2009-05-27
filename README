@@ -39,3 +39,11 @@ On the server side:
 keytool -importcert -keystore trusted_clients.jks -file client.pem -alias client
 
 # Don't forget to restart the server
+
+
+
+To compile the Java code:
+
+javac Handler.java
+javac Server.java
+
